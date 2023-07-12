@@ -25,6 +25,11 @@ class $StudentRecordsTable extends StudentRecords
       type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _schoolNameMeta =
       const VerificationMeta('schoolName');
   @override
@@ -38,7 +43,7 @@ class $StudentRecordsTable extends StudentRecords
       'image_path', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [id, uuid, schoolName, imagePath];
+  List<GeneratedColumn> get $columns => [id, uuid, name, schoolName, imagePath];
   @override
   String get aliasedName => _alias ?? 'student_records';
   @override
@@ -56,6 +61,12 @@ class $StudentRecordsTable extends StudentRecords
           _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
     } else if (isInserting) {
       context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
     }
     if (data.containsKey('school_name')) {
       context.handle(
@@ -84,6 +95,8 @@ class $StudentRecordsTable extends StudentRecords
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       uuid: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       schoolName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}school_name'])!,
       imagePath: attachedDatabase.typeMapping
@@ -100,11 +113,13 @@ class $StudentRecordsTable extends StudentRecords
 class StudentRecord extends DataClass implements Insertable<StudentRecord> {
   final int id;
   final String uuid;
+  final String name;
   final String schoolName;
   final String imagePath;
   const StudentRecord(
       {required this.id,
       required this.uuid,
+      required this.name,
       required this.schoolName,
       required this.imagePath});
   @override
@@ -112,6 +127,7 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
     map['school_name'] = Variable<String>(schoolName);
     map['image_path'] = Variable<String>(imagePath);
     return map;
@@ -121,6 +137,7 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
     return StudentRecordsCompanion(
       id: Value(id),
       uuid: Value(uuid),
+      name: Value(name),
       schoolName: Value(schoolName),
       imagePath: Value(imagePath),
     );
@@ -132,6 +149,7 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
     return StudentRecord(
       id: serializer.fromJson<int>(json['id']),
       uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
       schoolName: serializer.fromJson<String>(json['schoolName']),
       imagePath: serializer.fromJson<String>(json['imagePath']),
     );
@@ -142,16 +160,22 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
       'schoolName': serializer.toJson<String>(schoolName),
       'imagePath': serializer.toJson<String>(imagePath),
     };
   }
 
   StudentRecord copyWith(
-          {int? id, String? uuid, String? schoolName, String? imagePath}) =>
+          {int? id,
+          String? uuid,
+          String? name,
+          String? schoolName,
+          String? imagePath}) =>
       StudentRecord(
         id: id ?? this.id,
         uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
         schoolName: schoolName ?? this.schoolName,
         imagePath: imagePath ?? this.imagePath,
       );
@@ -160,6 +184,7 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
     return (StringBuffer('StudentRecord(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
           ..write('schoolName: $schoolName, ')
           ..write('imagePath: $imagePath')
           ..write(')'))
@@ -167,13 +192,14 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
   }
 
   @override
-  int get hashCode => Object.hash(id, uuid, schoolName, imagePath);
+  int get hashCode => Object.hash(id, uuid, name, schoolName, imagePath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is StudentRecord &&
           other.id == this.id &&
           other.uuid == this.uuid &&
+          other.name == this.name &&
           other.schoolName == this.schoolName &&
           other.imagePath == this.imagePath);
 }
@@ -181,31 +207,37 @@ class StudentRecord extends DataClass implements Insertable<StudentRecord> {
 class StudentRecordsCompanion extends UpdateCompanion<StudentRecord> {
   final Value<int> id;
   final Value<String> uuid;
+  final Value<String> name;
   final Value<String> schoolName;
   final Value<String> imagePath;
   const StudentRecordsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
     this.schoolName = const Value.absent(),
     this.imagePath = const Value.absent(),
   });
   StudentRecordsCompanion.insert({
     this.id = const Value.absent(),
     required String uuid,
+    required String name,
     required String schoolName,
     required String imagePath,
   })  : uuid = Value(uuid),
+        name = Value(name),
         schoolName = Value(schoolName),
         imagePath = Value(imagePath);
   static Insertable<StudentRecord> custom({
     Expression<int>? id,
     Expression<String>? uuid,
+    Expression<String>? name,
     Expression<String>? schoolName,
     Expression<String>? imagePath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
       if (schoolName != null) 'school_name': schoolName,
       if (imagePath != null) 'image_path': imagePath,
     });
@@ -214,11 +246,13 @@ class StudentRecordsCompanion extends UpdateCompanion<StudentRecord> {
   StudentRecordsCompanion copyWith(
       {Value<int>? id,
       Value<String>? uuid,
+      Value<String>? name,
       Value<String>? schoolName,
       Value<String>? imagePath}) {
     return StudentRecordsCompanion(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
       schoolName: schoolName ?? this.schoolName,
       imagePath: imagePath ?? this.imagePath,
     );
@@ -232,6 +266,9 @@ class StudentRecordsCompanion extends UpdateCompanion<StudentRecord> {
     }
     if (uuid.present) {
       map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
     }
     if (schoolName.present) {
       map['school_name'] = Variable<String>(schoolName.value);
@@ -247,6 +284,7 @@ class StudentRecordsCompanion extends UpdateCompanion<StudentRecord> {
     return (StringBuffer('StudentRecordsCompanion(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
           ..write('schoolName: $schoolName, ')
           ..write('imagePath: $imagePath')
           ..write(')'))

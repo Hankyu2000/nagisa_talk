@@ -1,11 +1,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nagisatalk_mkii/db/database.dart';
 import 'package:nagisatalk_mkii/router.dart';
 
 final textProvider = StateProvider((ref){
   return "Object";
 });
+
+final databaseProvider = Provider((ref) => Database());
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
